@@ -1,4 +1,4 @@
-#NodeJS multiplayer game using express and socket.io!
+# NodeJS multiplayer game using express and socket.io!
 
 Dependencies
 	- express
