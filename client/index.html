@@ -2,50 +2,23 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="client/css/main.css">
 	<title>Title</title>
 </head>
 <body>
 	<h1>NodeJS multiplayer game using express and socket.io!</h1>
-	<canvas id="cv" width="600" height="600" style="border: 1px solid #000000"></canvas>
+	
+	<canvas id="cv" width="600" height="600"></canvas>
+	
+	<div id="chat_logs">
+		<div>Start of chat...</div>
+	</div>
+
+	<form id="chat_form">
+		<input id="chat_msg" type="text"></input>
+	</form>
 </body>
 </html>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
-<script>
-	// create canvas and init socket
-	var can = document.getElementById("cv").getContext("2d");
-	can.font = '30px Arial';
-	var socket = io();
-
-	// update positions for all sockets
-	socket.on("newPositions", function(data) {
-		can.clearRect(0, 0, 600, 600);
-		for (var i = 0; i < data.length; i++) {
-			can.fillText(data[i].sprite, data[i].x, data[i].y);
-		}
-	});
-
-	// emit payload when a key is pressed or unpressed
-	document.onkeydown = function(event) {
-		if (event.keyCode === 87) // W
-			socket.emit('keyPress', {inputId:'up', state:true});
-		else if (event.keyCode === 65) // A
-			socket.emit('keyPress', {inputId:'left', state:true});
-		else if (event.keyCode === 83) // S
-			socket.emit('keyPress', {inputId:'down', state:true});
-		else if (event.keyCode === 68) // D
-			socket.emit('keyPress', {inputId:'right', state:true});
-	};
-
-	document.onkeyup = function(event) {
-		if (event.keyCode === 87) // W
-			socket.emit('keyPress', {inputId:'up', state:false});
-		else if (event.keyCode === 65) // A
-			socket.emit('keyPress', {inputId:'left', state:false});
-		else if (event.keyCode === 83) // S
-			socket.emit('keyPress', {inputId:'down', state:false});
-		else if (event.keyCode === 68) // D
-			socket.emit('keyPress', {inputId:'right', state:false});
-	};
-
-</script>
+<script src="/client/js/main.js"></script>

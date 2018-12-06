@@ -1,0 +1,13 @@
+#cv {
+	border: 1px solid #000000
+}
+
+#chat_logs {
+	width: 600px;
+	height: 100px;
+	overflow-y: auto
+}
+
+#chat_msg {
+	width: 600px;
+}
