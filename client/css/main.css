@@ -11,21 +11,25 @@
 }
 
 #chat_logs {
-	width: 600px;
-	height: 100px;
+	width: 400px;
+	height: 600px;
 	overflow-y: auto
 }
 
 #chat_msg {
-	width: 600px;
+	width: 400px;
 }
 
 #game {
 	display: none;
+	float: left;
 }
 
 #lower {
 	display: none;
+	border: 1px solid black;
+	margin: 10px;
+	padding: 10px;
 }
 
 h1 {
