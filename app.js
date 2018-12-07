@@ -18,14 +18,33 @@ var DEBUG = true;
 var SOCKETS = {};
 
 // base type for anything(movable) we will print to the screen
-var Entity = () => {
+var Entity = (data) => {
 	var self = {
 		x: 300,
 		y: 300,
 		speedX: 0,
 		speedY: 0,
 		id: "",
+		world:'default',
 	};
+
+	if (data) {
+		if (data.x) {
+			self.x = data.x;
+		}
+
+		if (data.y) {
+			self.y = data.y;
+		}
+
+		if (data.world) {
+			self.world = data.world;
+		}
+
+		if (data.id) {
+			self.id = data.id;
+		}
+	}
 	
 	self.update = () => {
 		self.updatePosition();
@@ -43,10 +62,10 @@ var Entity = () => {
 	return self;
 }
 
-var Player = (id) => {
+// ------------------------ PLAYER ------------------------
+var Player = (data) => {
 	// set defaults
-	var self = Entity();
-	self.id = id;
+	var self = Entity(data);
 	self.sprite = "X";
 	self.upPressed = false;
 	self.leftPressed = false;
@@ -70,9 +89,13 @@ var Player = (id) => {
 	}
 
 	self.shootProjectile = (angle) => {
-		var p = Projectile(self.id, angle);
-		p.x = self.x;
-		p.y = self.y;
+		var p = Projectile({
+			owner:self.id,
+			angle:angle,
+			x:self.x,
+			y:self.y,
+			world:self.world,
+		});
 	}
 
 	// Move the player
@@ -103,6 +126,7 @@ var Player = (id) => {
 			health:self.health,
 			maxHealth:self.maxHealth,
 			score:self.score,
+			world:self.world,
 		}
 	}
 
@@ -114,21 +138,28 @@ var Player = (id) => {
 			sprite:self.sprite,
 			health:self.health,
 			score:self.score,
+			world:self.world,
 		}
 	}
 
-	Player.list[id] = self;
+	Player.list[self.id] = self;
 
 	createP.player.push(self.getCreatePack());
 	return self;
 };
-Player.list = {};
 
 Player.onConnection = (socket) => {
-	var player = Player(socket.id);
-	
+	var world = 'default';
+	if (Math.random() < 0.5) {
+		world = 'alt';
+	}
+	var player = Player({
+		id:socket.id,
+		world:world,
+	});
+
 	// Update players key states
-	socket.on('keyPress', (data) => {
+	socket.on('key_press', (data) => {
 		if (data.inputId === 'up') {
 			player.upPressed = data.state;
 		} else if (data.inputId === 'left') {
@@ -141,6 +172,14 @@ Player.onConnection = (socket) => {
 			player.leftClickPressed = data.state;
 		} else if (data.inputId === 'mousePos') {
 			player.mousePos = data.state;
+		}
+	});
+
+	socket.on('change_world', (data) => {
+		if (player.world === 'default') {
+			player.world = 'alt';
+		} else {
+			player.world = 'default';
 		}
 	});
 
@@ -176,13 +215,14 @@ Player.update = () => {
 	return pack;
 }
 
-var Projectile = (owner, angle) => {
-	var self = Entity();
+// ------------------------ PROJECTILE ------------------------
+var Projectile = (data) => {
+	var self = Entity(data);
 	self.id = Math.random();
-	self.speedX = Math.cos(angle / 180 * Math.PI) * 10;
-	self.speedY = Math.sin(angle / 180 * Math.PI) * 10;
-	
-	self.owner = owner;
+	self.speedX = Math.cos(data.angle / 180 * Math.PI) * 10;
+	self.speedY = Math.sin(data.angle / 180 * Math.PI) * 10;
+	self.angle = data.angle;
+	self.owner = data.owner;
 
 	self.timer = 0;
 	self.toDelete = false;
@@ -197,7 +237,7 @@ var Projectile = (owner, angle) => {
 
 		for (var i in Player.list) {
 			var p = Player.list[i];
-			if (self.getDist(p) < 32 && self.owner !== p.id) {
+			if (self.world === p.world && self.getDist(p) < 28 && self.owner !== p.id) {
 				p.health -= 5;
 				if (p.health <= 0) {
 					var shooter = Player.list[self.owner];
@@ -219,6 +259,7 @@ var Projectile = (owner, angle) => {
 			id:self.id,
 			x:self.x,
 			y:self.y,
+			world:self.world,
 		}
 	}
 	
@@ -234,7 +275,6 @@ var Projectile = (owner, angle) => {
 	createP.projectile.push(self.getCreatePack());
 	return self;
 }
-Projectile.list = {};
 
 // update pos of projectile, add it's data to the list
 Projectile.update = () => {
@@ -252,7 +292,7 @@ Projectile.update = () => {
 	}
 	return pack;
 }
-
+// ------------------------------------
 // database helper functions ----------
 var checkPassword = (data, callBack) => {
 	db.users.find({user:data.user, pass:data.pass}, (error, result) => {
@@ -279,8 +319,10 @@ var createUser = (data, callBack) => {
 		callBack();
 	});
 }
-// ------------------------------
-
+// GLOBAL LISTS ------------------------------
+Player.list = {};
+Projectile.list = {};
+// CONNECTIONS -------------------------------
 io.sockets.on('connection', (socket) => {
 	// set default values for the new socket
 	socket.id = Math.random();
@@ -362,3 +404,22 @@ setInterval(() => {
 	deleteP.projectile = [];
 
 }, 1000/25);
+
+
+/*
+var perf_profiler = require('v8-profiler');
+var fs = require('fs');
+var beginProfiling = function(duration) {
+	perf_profiler.beginProfiling('1', true);
+	setTimeout(function(){
+		var profile = perf_profiler.stopProfiling('1');
+		
+		profile.export(function(error, result) {
+			fs.writeFile('./profile.cpuprofile', result);
+			profile.delete();
+			console.log("Profile saved to disk.");
+		});
+	},duration);	
+}
+beginProfiling(10000);
+*/

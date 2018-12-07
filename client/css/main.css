@@ -1,5 +1,13 @@
-#cv {
-	border: 1px solid #000000
+#cv, #gui-cv {
+	border: 1px solid #000000;
+	position: absolute;
+}
+
+#gui {
+	border: 1px solid #000000;
+	position: relative;
+	width: 600px;
+	height: 600px;
 }
 
 #chat_logs {
@@ -16,8 +24,18 @@
 	display: none;
 }
 
+#lower {
+	display: none;
+}
+
 h1 {
 	font-size: 30px;
 	padding: 0;
 	margin: 0;
+}
+
+#changeWorld {
+	position: absolute;
+	bottom: 0px;
+	right: 0px;
 }

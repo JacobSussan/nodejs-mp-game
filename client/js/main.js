@@ -9,6 +9,7 @@ var user = document.getElementById("user");
 var pass = document.getElementById("pass");
 var login = document.getElementById("login");
 var signup = document.getElementById("signup");
+var lower = document.getElementById("lower");
 
 login.onclick = () => {
 	socket.emit('login', {user:user.value, pass:pass.value})
@@ -22,6 +23,7 @@ socket.on('loginResponse', (data) => {
 	if (data.success) {
 		account.style.display = 'none';
 		game.style.display = 'inline-block';
+		lower.style.display = 'inline-block';
 	} else {
 		alert("No records matching for that username/password combo. Please check your details and try again.");
 	}
@@ -39,8 +41,6 @@ socket.on('signUpResponse', (data) => {
 var chat_logs = document.getElementById('chat_logs');
 var chat_msg = document.getElementById('chat_msg');
 var chat_form = document.getElementById('chat_form');
-var can = document.getElementById("cv").getContext("2d");
-can.font = '20px Arial';
 
 // add a message to the chatbox
 socket.on("update_chat", (data) => {
@@ -65,15 +65,28 @@ chat_form.onsubmit = (e) => {
 	chat_msg.value = '';
 }
 
+// GUI
+var changeWorld = () => {
+	socket.emit('change_world');
+}
+
 // GAME
 var Img = {};
 Img.player = new Image();
 Img.player.src = "/client/img/player.png";
 Img.projectile = new Image();
 Img.projectile.src = "/client/img/projectile.png";
-Img.world = new Image();
-Img.world.src = "/client/img/world.png";
+Img.world = {};
+Img.world['default'] = new Image();
+Img.world['default'].src = "/client/img/default.png";
+Img.world['alt'] = new Image();
+Img.world['alt'].src = "/client/img/alt.png";
 
+var can = document.getElementById("cv").getContext("2d");
+var gui_can = document.getElementById("gui-cv").getContext("2d");
+gui_can.font = '20px Arial';
+
+// ------------------------ PLAYER ------------------------
 var Player = function(initP) {
 	var self = {};
 	self.id = initP.id;
@@ -83,9 +96,13 @@ var Player = function(initP) {
 	self.health = initP.health;
 	self.maxHealth = initP.maxHealth;
 	self.score = initP.score;
+	self.world = initP.world;
 	Player.list[self.id] = self;
 
 	self.draw = () => {
+		if (Player.list[myId].world !== self.world) {
+			return;
+		}
 		var x = self.x - Player.list[myId].x + WIDTH / 2;
 		var y = self.y - Player.list[myId].y + HEIGHT / 2;
 
@@ -97,22 +114,24 @@ var Player = function(initP) {
 		var h = Img.player.height;
 
 		can.drawImage(Img.player, 0, 0, Img.player.width, Img.player.height, x - w / 2, y - h / 2, w, h);
-
-		// can.fillText(self.score, self.x, self.y-70);
 	}
 
 	return self;
 }
-Player.list = {};
 
+// ------------------------ PROJECTILE ------------------------
 var Projectile = function (initP) {
 	var self = {};
 	self.id = initP.id;
 	self.x = initP.x;
 	self.y = initP.y;
+	self.world = initP.world;
 	Projectile.list[self.id] = self;
 
 	self.draw = () => {
+		if (Player.list[myId].world !== self.world) {
+			return;
+		}
 		var w = Img.projectile.width;
 		var h = Img.projectile.height;
 
@@ -124,9 +143,6 @@ var Projectile = function (initP) {
 
 	return self;
 }
-Projectile.list = {};
-
-var myId = null;
 
 // add a new entity
 socket.on("create", (data) => {
@@ -163,6 +179,10 @@ socket.on("update", (data) => {
 			if (pack.score !== undefined) {
 				player.score = pack.score;
 			}
+
+			if (pack.world !== undefined) {
+				player.world = pack.world;
+			}
 		}
 	}
 	// check & update projectiles
@@ -180,6 +200,7 @@ socket.on("update", (data) => {
 		}
 	}
 });
+
 // remove an entity
 socket.on("delete", (data) => {
 	for (var i = 0; i < data.player.length; i++) {
@@ -189,6 +210,12 @@ socket.on("delete", (data) => {
 		delete Projectile.list[data.projectile[i]];
 	}
 });
+
+// GLOBALs -------------
+Projectile.list = {};
+Player.list = {};
+var myId = null;
+var lastScore = null;
 
 // drawgame loop
 setInterval(() => {
@@ -208,50 +235,57 @@ setInterval(() => {
 }, 1000/25);
 
 var drawWorld = () => {
-	var x = WIDTH / 2 - Player.list[myId].x;
-	var y = HEIGHT / 2 - Player.list[myId].y;
-	can.drawImage(Img.world, x, y);
+	var p = Player.list[myId];
+	var x = WIDTH / 2 - p.x;
+	var y = HEIGHT / 2 - p.y;
+	can.drawImage(Img.world[p.world], x, y);
 }
 
 var drawScore = () => {
+	if (lastScore === Player.list[myId].score) {
+		return;
+	}
+
 	if (myId) {
-		can.fillStyle = 'white';
-		can.fillText("Score: " + Player.list[myId].score, 0, 600);
+		lastScore = Player.list[myId].score;
+		gui_can.clearRect(0, 0, 600, 600);
+		gui_can.fillStyle = 'black';
+		gui_can.fillText("Score: " + Player.list[myId].score, 0, 600);
 	}
 }
 
 // INPUT
 document.onkeydown = (e) => {
 	if (e.keyCode === 87) {
-		socket.emit('keyPress', {inputId:'up', state:true}); // W
+		socket.emit('key_press', {inputId:'up', state:true}); // W
 	} else if (e.keyCode === 65) {
-		socket.emit('keyPress', {inputId:'left', state:true}); // A
+		socket.emit('key_press', {inputId:'left', state:true}); // A
 	} else if (e.keyCode === 83) {
-		socket.emit('keyPress', {inputId:'down', state:true}); // S
+		socket.emit('key_press', {inputId:'down', state:true}); // S
 	} else if (e.keyCode === 68) {
-		socket.emit('keyPress', {inputId:'right', state:true}); // D
+		socket.emit('key_press', {inputId:'right', state:true}); // D
 	}
 };
 
 document.onkeyup = (e) => {
 	if (e.keyCode === 87) {
-		socket.emit('keyPress', {inputId:'up', state:false}); // W
+		socket.emit('key_press', {inputId:'up', state:false}); // W
 	} else if (e.keyCode === 65) {
-		socket.emit('keyPress', {inputId:'left', state:false}); // A
+		socket.emit('key_press', {inputId:'left', state:false}); // A
 	} else if (e.keyCode === 83) {
-		socket.emit('keyPress', {inputId:'down', state:false}); // S
+		socket.emit('key_press', {inputId:'down', state:false}); // S
 	} else if (e.keyCode === 68) {
-		socket.emit('keyPress', {inputId:'right', state:false}); // D
+		socket.emit('key_press', {inputId:'right', state:false}); // D
 	}
 };
 
 // shoot
 document.onmousedown = (e) => {
-	socket.emit('keyPress', {inputId:'leftClick', state:true}); // left click
+	socket.emit('key_press', {inputId:'leftClick', state:true}); // left click
 }
 
 document.onmouseup = (e) => {
-	socket.emit('keyPress', {inputId:'leftClick', state:false}); // left click
+	socket.emit('key_press', {inputId:'leftClick', state:false}); // left click
 }
 
 // update mouse pos
@@ -260,5 +294,5 @@ document.onmousemove = (e) => {
 	var x = -300 + e.clientX - 9;
 	var y = -300 + e.clientY - 42;
 	var angle = Math.atan2(y, x) / Math.PI * 180;
-	socket.emit('keyPress', {inputId:'mousePos', state:angle});
+	socket.emit('key_press', {inputId:'mousePos', state:angle});
 }
