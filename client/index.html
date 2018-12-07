@@ -6,17 +6,25 @@
 	<title>Title</title>
 </head>
 <body>
-	<h1>NodeJS multiplayer game using express and socket.io!</h1>
-	
-	<canvas id="cv" width="600" height="600"></canvas>
-	
-	<div id="chat_logs">
-		<div>Start of chat...</div>
+	<div id="account">
+		<span>User:</span> <input type="text" id="user"><br>
+		<span>Pass:</span> <input type="pass" id="pass"><br>
+		<button id="login">Sign In</button>
+		<button id="signup">Sign Up</button>
 	</div>
+	<div id="game">
+		<h1>NodeJS multiplayer game using express and socket.io!</h1>
 
-	<form id="chat_form">
-		<input id="chat_msg" type="text"></input>
-	</form>
+		<canvas id="cv" width="600" height="600"></canvas>
+
+		<div id="chat_logs">
+			<div>Start of chat...</div>
+		</div>
+
+		<form id="chat_form">
+			<input id="chat_msg" type="text">
+		</form>
+	</div>
 </body>
 </html>
 

@@ -11,3 +11,13 @@
 #chat_msg {
 	width: 600px;
 }
+
+#game {
+	display: none;
+}
+
+h1 {
+	font-size: 30px;
+	padding: 0;
+	margin: 0;
+}
