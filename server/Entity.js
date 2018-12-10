@@ -29,14 +29,16 @@ Entity = function(data) {
 			self.id = data.id;
 		}
 	}
-	
+
 	self.update = () => {
 		self.updatePosition();
 	}
-	
+
 	self.updatePosition = () => {
-		self.x += self.speedX;
-		self.y += self.speedY;
+		if (World.checkCollision(parseInt(self.y + self.speedY), parseInt(self.x + self.speedX))) {
+			self.x += self.speedX;
+			self.y += self.speedY;
+		}
 	}
 
 	self.getDist = (pos) => {
@@ -163,11 +165,13 @@ Player = function(data) {
 
 Player.onConnection = function(socket, user, playerData) {
 	var world = 'default';
-	if (Math.random() < 0.5) {
-		world = 'alt';
-	}
+	// if (Math.random() < 0.5) {
+		// world = 'alt';
+	// }
 
 	var player = Player({
+		x:playerData.pos.x,
+		y:playerData.pos.y,
 		user:user,
 		id:socket.id,
 		world:world,
@@ -259,6 +263,7 @@ Player.onDissconnect = function(socket) {
 	Database.savePlayerData({
 		user:p.user,
 		items:p.inventory.items,
+		pos: { x:p.x, y:p.y },
 	});
 
 	delete Player.list[socket.id];
@@ -306,8 +311,8 @@ Projectile = function(data) {
 					}
 					
 					p.health = p.maxHealth;
-					p.x = Math.random() * 600;
-					p.y = Math.random() * 600;
+					p.x = 30 + (Math.random() * 570);
+					p.y = 30 + (Math.random() * 570);
 				}
 				self.toDelete = true;
 			}

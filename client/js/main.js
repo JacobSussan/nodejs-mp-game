@@ -333,12 +333,17 @@ var addHotkey = function(data) {
 	let item = Item.list[data.id];
 	let btn = document.createElement('button');
 	let input = document.createElement('input');
-	input.value = String.fromCharCode(hotbar[item.id].toString().toUpperCase())
+
+	if (input.value !== undefined && hotbar[item.id] !== undefined) {
+		input.value = String.fromCharCode(hotbar[item.id].toString().toUpperCase());
+	}
+
 	btn.onclick = function() {
 		let charCode = input.value.toUpperCase().charCodeAt(0);
 		hotbar[item.id] = charCode;
 		socket.emit('hotkey_update', {hotbar:hotbar});
 	}
+
 	btn.innerText = "Set " + item.name;
 	settings.appendChild(input);
 	settings.appendChild(btn);

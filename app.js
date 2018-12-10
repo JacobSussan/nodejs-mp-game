@@ -6,6 +6,7 @@ var io = require('socket.io')(serv,{});
 require('./server/Database');
 require('./server/Entity');
 require('./client/js/Inventory');
+require('./client/js/World');
 
 app.get('/', function(req, res) {
 	res.sendFile(__dirname + '/client/index.html');
