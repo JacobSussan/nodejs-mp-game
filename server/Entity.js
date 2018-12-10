@@ -166,12 +166,13 @@ Player.onConnection = function(socket, user, playerData) {
 	if (Math.random() < 0.5) {
 		world = 'alt';
 	}
+
 	var player = Player({
 		user:user,
 		id:socket.id,
 		world:world,
 		socket:socket,
-		playerData:playerData
+		playerData:playerData,
 	});
 
 	player.inventory.refreshRender();
@@ -225,6 +226,12 @@ Player.onConnection = function(socket, user, playerData) {
 		}
 	});
 
+	// listen for hotkey updates
+	socket.on('hotkey_update', (data) => {
+		data.user = Player.list[socket.id].user;
+		Database.updateHotkeys(data, () => {});
+	});
+
 	var players = [];
 	for (var i in Player.list) {
 		players.push(Player.list[i].getCreatePack())
@@ -239,6 +246,7 @@ Player.onConnection = function(socket, user, playerData) {
 		myId:socket.id,
 		player:players,
 		projectile:projectile,
+		hotbar:playerData.hotbar,
 	});
 }
 
@@ -344,7 +352,6 @@ Projectile.update = function() {
 	}
 	return pack;
 }
-
 
 // GLOBAL LISTS ------------------------------
 Player.list = {};

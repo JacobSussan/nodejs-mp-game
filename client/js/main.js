@@ -74,18 +74,6 @@ chat_form.onsubmit = (e) => {
 	chat_msg.value = '';
 }
 
-// GUI
-var changeWorld = () => {
-	socket.emit('change_world');
-}
-
-var inventory = new Inventory([], socket, false);
-
-socket.on('update_inventory', (items) => {
-	inventory.items = items;
-	inventory.refreshRender();
-});
-
 // GAME
 var Img = {};
 Img.player = new Image();
@@ -165,11 +153,18 @@ socket.on("create", (data) => {
 	if (data.myId) {
 		myId = data.myId;
 	}
+
 	for (var i = 0; i < data.player.length; i++) {
 		new Player(data.player[i]);
 	}
+
 	for (var i = 0; i < data.projectile.length; i++) {
 		new Projectile(data.projectile[i]);
+	}
+
+	if (data.hotbar) {
+		hotbar = data.hotbar;
+		inventory.refreshRender();
 	}
 });
 
@@ -271,6 +266,8 @@ var drawScore = () => {
 }
 
 // INPUT
+var hotbar = { 'pot':49, 'ult':50 };
+
 game.onkeydown = (e) => {
 	if (e.keyCode === 87) {
 		socket.emit('key_press', {inputId:'up', state:true}); // W
@@ -280,6 +277,14 @@ game.onkeydown = (e) => {
 		socket.emit('key_press', {inputId:'down', state:true}); // S
 	} else if (e.keyCode === 68) {
 		socket.emit('key_press', {inputId:'right', state:true}); // D
+	}
+
+	var hotbarKeys = Object.keys(hotbar);
+	var hotbarValues = Object.values(hotbar);
+	for (var i = 0; i < hotbarKeys.length; i++) {
+		if (hotbarValues[i] == e.keyCode) {
+			self.socket.emit('use_item', hotbarKeys[i]);
+		}
 	}
 };
 
@@ -316,3 +321,33 @@ game.onmousemove = (e) => {
 game.oncontextmenu = (e) => {
 	e.preventDefault();
 }
+
+// GUI
+var changeWorld = () => {
+	socket.emit('change_world');
+}
+
+var settings = document.getElementById("settings");
+
+var addHotkey = function(data) {
+	let item = Item.list[data.id];
+	let btn = document.createElement('button');
+	let input = document.createElement('input');
+	input.value = String.fromCharCode(hotbar[item.id].toString().toUpperCase())
+	btn.onclick = function() {
+		let charCode = input.value.toUpperCase().charCodeAt(0);
+		hotbar[item.id] = charCode;
+		socket.emit('hotkey_update', {hotbar:hotbar});
+	}
+	btn.innerText = "Set " + item.name;
+	settings.appendChild(input);
+	settings.appendChild(btn);
+}
+
+// INVENTORY
+inventory = new Inventory([], socket, false);
+
+socket.on('update_inventory', (items) => {
+	inventory.items = items;
+	inventory.refreshRender();
+});

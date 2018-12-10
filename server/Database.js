@@ -24,7 +24,7 @@ Database.usernameExists = function(data, callBack) {
 }
 
 Database.createUser = function(data, callBack) {
-	db.users.insert({user:data.user, pass:data.pass, items:[]}, (error) => {
+	db.users.insert({user:data.user, pass:data.pass, items:[], hotbar:[]}, (error) => {
 		callBack();
 	});
 }
@@ -33,10 +33,15 @@ Database.getPlayerData = function(user, callBack) {
 	db.users.findOne({user:user}, function(error, result) {
 		callBack({
 			items:result.items,
+			hotbar:result.hotbar,
 		});
 	});
 }
 
 Database.savePlayerData = function(data, callBack) {
 	db.users.update( { user:data.user }, { $set: {items:data.items} }, callBack );
+}
+
+Database.updateHotkeys = function(data, callBack) {
+	db.users.update( { user:data.user }, { $set: {hotbar:data.hotbar} }, callBack );
 }

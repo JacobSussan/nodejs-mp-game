@@ -17,7 +17,7 @@ serv.listen(3000);
 console.log('Server started.');
 
 var DEBUG = true;
-var SOCKETS = {};
+SOCKETS = {};
 
 // CONNECTIONS -------------------------------
 io.sockets.on('connection', function(socket) {

@@ -48,7 +48,7 @@ Inventory = function(items, socket, server) {
 			return;
 		}
 
-		//client only
+		// client only
 		var inv = document.getElementById("inventory");
 		inv.innerHTML = "";
 		var addBtn = function(data) {
@@ -63,6 +63,12 @@ Inventory = function(items, socket, server) {
 
 		for (var i = 0 ; i < self.items.length; i++) {
 			addBtn(self.items[i]);
+		}
+		
+		// Update settings
+		settings.innerHTML = "";
+		for (var i = 0 ; i < inventory.items.length; i++) {
+			addHotkey(inventory.items[i]);
 		}
 	}
 
