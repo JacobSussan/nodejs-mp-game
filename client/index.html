@@ -12,7 +12,7 @@
 		<button id="login">Sign In</button>
 		<button id="signup">Sign Up</button>
 	</div>
-	<div id="game">
+	<div id="game" tabindex="0">
 		<h1>NodeJS multiplayer game using express and socket.io!</h1>
 		<canvas id="cv" width="600" height="600"></canvas>
 		<canvas id="gui-cv" width="600" height="600"></canvas>
@@ -21,6 +21,7 @@
 		</div>
 	</div>
 	<div id="lower">
+		<div id="inventory"></div>
 		<div id="chat_logs">
 			<div>Start of chat...</div>
 		</div>
@@ -33,4 +34,5 @@
 </html>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+<script src="/client/js/Inventory.js"></script>
 <script src="/client/js/main.js"></script>

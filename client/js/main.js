@@ -10,6 +10,7 @@ var pass = document.getElementById("pass");
 var login = document.getElementById("login");
 var signup = document.getElementById("signup");
 var lower = document.getElementById("lower");
+var game = document.getElementById("game");
 
 login.onclick = () => {
 	socket.emit('login', {user:user.value, pass:pass.value})
@@ -24,6 +25,7 @@ socket.on('loginResponse', (data) => {
 		account.style.display = 'none';
 		game.style.display = 'inline-block';
 		lower.style.display = 'inline-block';
+		game.focus();
 	} else {
 		alert("No records matching for that username/password combo. Please check your details and try again.");
 	}
@@ -57,7 +59,14 @@ chat_form.onsubmit = (e) => {
 	e.preventDefault();
 
 	if (chat_msg.value[0] === "/") {
-		socket.emit('eval', chat_msg.value.slice(1));
+		if (chat_msg.value[1] === "w" && chat_msg.value.split(' ')[1] !== undefined) {
+			socket.emit('new_direct_msg', {
+				user:chat_msg.value.split(' ')[1],
+				msg:chat_msg.value.slice(chat_msg.value.indexOf(' ') + 2),
+			});
+		} else {
+			socket.emit('eval', chat_msg.value.slice(1));
+		}
 	} else {
 		socket.emit('new_chat', chat_msg.value);
 	}
@@ -69,6 +78,13 @@ chat_form.onsubmit = (e) => {
 var changeWorld = () => {
 	socket.emit('change_world');
 }
+
+var inventory = new Inventory([], socket, false);
+
+socket.on('update_inventory', (items) => {
+	inventory.items = items;
+	inventory.refreshRender();
+});
 
 // GAME
 var Img = {};
@@ -255,7 +271,7 @@ var drawScore = () => {
 }
 
 // INPUT
-document.onkeydown = (e) => {
+game.onkeydown = (e) => {
 	if (e.keyCode === 87) {
 		socket.emit('key_press', {inputId:'up', state:true}); // W
 	} else if (e.keyCode === 65) {
@@ -267,7 +283,7 @@ document.onkeydown = (e) => {
 	}
 };
 
-document.onkeyup = (e) => {
+game.onkeyup = (e) => {
 	if (e.keyCode === 87) {
 		socket.emit('key_press', {inputId:'up', state:false}); // W
 	} else if (e.keyCode === 65) {
@@ -280,19 +296,23 @@ document.onkeyup = (e) => {
 };
 
 // shoot
-document.onmousedown = (e) => {
+game.onmousedown = (e) => {
 	socket.emit('key_press', {inputId:'leftClick', state:true}); // left click
 }
 
-document.onmouseup = (e) => {
+game.onmouseup = (e) => {
 	socket.emit('key_press', {inputId:'leftClick', state:false}); // left click
 }
 
 // update mouse pos
-document.onmousemove = (e) => {
+game.onmousemove = (e) => {
 	// 9, 42 = hardcoded for padding/margins in css... fix later
 	var x = -300 + e.clientX - 9;
 	var y = -300 + e.clientY - 42;
 	var angle = Math.atan2(y, x) / Math.PI * 180;
 	socket.emit('key_press', {inputId:'mousePos', state:angle});
+}
+
+game.oncontextmenu = (e) => {
+	e.preventDefault();
 }

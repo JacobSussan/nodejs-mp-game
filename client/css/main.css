@@ -1,3 +1,6 @@
+* {
+	-webkit-user-select: none;
+}
 #cv, #gui-cv {
 	border: 1px solid #000000;
 	position: absolute;
@@ -23,6 +26,7 @@
 #game {
 	display: none;
 	float: left;
+	outline: none;
 }
 
 #lower {
