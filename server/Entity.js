@@ -88,6 +88,7 @@ Player = function(data) {
 	self.health = 100;
 	self.maxHealth = 100;
 	self.score = 0;
+	self.coolDown = 0;
 	self.inventory = new Inventory(data.playerData.items, data.socket, true);
 
 	// self.inventory.addItem('potion', 10);
@@ -98,7 +99,10 @@ Player = function(data) {
 		self.updateDirection();
 		_update();
 
-		if (self.leftClickPressed) {
+		if (self.coolDown > 0) {
+			self.coolDown--;
+		} else if (self.leftClickPressed) {
+			self.coolDown = 6;
 			self.shootProjectile(self.mousePos);
 		}
 	}
@@ -233,7 +237,7 @@ Player.onConnection = function(socket, user, playerData) {
 	// listen for hotkey updates
 	socket.on('hotkey_update', (data) => {
 		data.user = Player.list[socket.id].user;
-		Database.updateHotkeys(data, () => {});
+		Database.updateHotkeys(data);
 	});
 
 	var players = [];
@@ -284,8 +288,8 @@ Player.update = function() {
 Projectile = function(data) {
 	var self = Entity(data);
 	self.id = Math.random();
-	self.speedX = Math.cos(data.angle / 180 * Math.PI) * 10;
-	self.speedY = Math.sin(data.angle / 180 * Math.PI) * 10;
+	self.speedX = Math.cos(data.angle / 180 * Math.PI) * 20;
+	self.speedY = Math.sin(data.angle / 180 * Math.PI) * 20;
 	self.angle = data.angle;
 	self.owner = data.owner;
 
